@@ -26,7 +26,7 @@ class SpExPlusTwinSpeechEncoder(BaseModel):
 
         self.L1, self.L2, self.L3 = L1, L2, L3
 
-        self.encoder_convs = {
+        self.encoder_convs = nn.ModuleDict({
             filter: nn.Conv1d(
                 in_channels=1,
                 out_channels=n_filters,
@@ -34,22 +34,22 @@ class SpExPlusTwinSpeechEncoder(BaseModel):
                 stride=L1 // 2
             )
             for filter in ["L1", "L2", "L3"]
-        }
+        })
 
         # layer norms and projections do not share weights
-        self.encoder_layer_norms = {
+        self.encoder_layer_norms = nn.ModuleDict({
             key: nn.LayerNorm(3 * n_filters)
             for key in ["mixed", "ref"]
-        }
+        })
         self.activation = nn.ReLU()
-        self.projections = {
+        self.projections = nn.ModuleDict({
             key: nn.Conv1d(
                 in_channels=3 * n_filters,
                 out_channels=out_channels,
                 kernel_size=1
             )
             for key in ["mixed", "ref"]
-        }
+        })
 
     def forward(self, input, input_type):
         """

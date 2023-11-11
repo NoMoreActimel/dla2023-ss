@@ -41,37 +41,34 @@ class SpExPlusSpeakerExtractor(BaseModel):
         """
         super().__init__()
 
-        self.TCN_stacks = [
-            [
-                TCNBlock(
-                    in_channels=in_channels,
-                    conv_channels=tcn_conv_channels,
-                    kernel_size=tcn_kernel_size,
-                    dilation=tcn_dilation,
-                    use_speaker_embedding=(block_idx == 0),
-                    speaker_embedding_dim=speaker_embedding_dim,
-                    causal=causal
-                )
-                for block_idx in range(n_tcn_blocks)
-            ]
+        self.TCN_stacks = nn.ModuleList([
+            TCNBlock(
+                in_channels=in_channels,
+                conv_channels=tcn_conv_channels,
+                kernel_size=tcn_kernel_size,
+                dilation=tcn_dilation,
+                use_speaker_embedding=(block_idx == 0),
+                speaker_embedding_dim=speaker_embedding_dim,
+                causal=causal
+            )
+            for block_idx in range(n_tcn_blocks)
             for stack_idx in range(n_tcn_stacks)
-        ]
+        ])
 
-        self.masks = {
+        self.masks = nn.ModuleDict({
             filter: nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=1
             )
             for filter in ["L1", "L2", "L3"]
-        }
+        })
         self.activation = nn.ReLU()
 
 
     def forward(self, input, speaker_embed):
-        for TCN_stack in self.TCN_stacks:
-            for TCN_block in TCN_stack:
-                output = TCN_block(input, speaker_embed)
+        for TCN_block in self.TCN_stacks:
+            output = TCN_block(input, speaker_embed)
         
         masks = {
             filter: self.activation(mask(output))

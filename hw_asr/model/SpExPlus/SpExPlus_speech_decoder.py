@@ -23,7 +23,7 @@ class SpExPlusSpeechDecoder(BaseModel):
 
         self.L1, self.L2, self.L3 = L1, L2, L3
 
-        self.decoder_convs = {
+        self.decoder_convs = nn.ModuleDict({
             filter: nn.ConvTranspose1d(
                 in_channels=n_filters,
                 out_channels=1,
@@ -31,7 +31,7 @@ class SpExPlusSpeechDecoder(BaseModel):
                 stride=getattr(self, filter) // 2
             )
             for filter in ["L1", "L2", "L3"]
-        }
+        })
 
     def forward(self, input_by_filter):        
         outputs = {
