@@ -135,7 +135,9 @@ class Trainer(BaseTrainer):
                 )
                 # self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
                 # self._log_spectrogram(batch["spectrogram"])
-                self._log_audio(batch["audio"])
+                self._log_audio(batch["input"], "mixed_audio")
+                self._log_audio(batch["ref"], "ref_audio")
+                self._log_audio(batch["predicts"], "predicted_audio")
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
                 # because we are interested in recent train metrics
@@ -163,9 +165,9 @@ class Trainer(BaseTrainer):
         outputs, speaker_logits = self.model(**batch)
         batch["predicts"] = outputs
         batch["speaker_logits"] = speaker_logits
-        
+
         speaker_predicts = torch.softmax(batch["speaker_logits"], dim=1).argmax(dim=1)
-        speaker_accuracy = (speaker_predicts == batch["speaker_id"]).mean()
+        speaker_accuracy = (speaker_predicts == batch["speaker_id"]).sum() / speaker_predicts.shape[0]
 
         # if type(outputs) is dict:
         #     batch.update(outputs)
@@ -331,10 +333,10 @@ class Trainer(BaseTrainer):
         image = PIL.Image.open(plot_spectrogram_to_buf(spectrogram))
         self.writer.add_image("spectrogram", ToTensor()(image))
 
-    def _log_audio(self, audio_batch):
+    def _log_audio(self, audio_batch, audio_name="audio"):
         audio = random.choice(audio_batch)
         sample_rate = self.config["preprocessing"]["sr"]
-        self.writer.add_audio("audio", audio, sample_rate=sample_rate)
+        self.writer.add_audio(audio_name, audio, sample_rate=sample_rate)
 
     @torch.no_grad()
     def get_grad_norm(self, norm_type=2):
