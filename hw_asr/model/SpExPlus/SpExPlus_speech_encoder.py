@@ -55,6 +55,10 @@ class SpExPlusTwinSpeechEncoder(BaseModel):
         """
         input: input audio tensor
         input_type: either "mixed" or "ref"
+
+        returns:
+            outputs_cat: concatenated and normalized encoded inputs by all filters
+            outputs: dict of encoded inputs by L1, L2, L3 as keys
         """
         outputs = {}
         
@@ -75,12 +79,12 @@ class SpExPlusTwinSpeechEncoder(BaseModel):
         outputs["L3"] = self.activation(self.encoder_convs["L3"](input_l3))
         
         # Cat to Batch x (3 * N_filters) x Dim
-        outputs = torch.cat([outputs["L1"], outputs["L2"], outputs["L3"]], dim=1)
+        outputs_cat = torch.cat([outputs["L1"], outputs["L2"], outputs["L3"]], dim=1)
 
         # use specific layer norm for mixed and ref audios
-        outputs = self.encoder_layer_norms[input_type](outputs)
+        outputs_cat = self.encoder_layer_norms[input_type](outputs_cat)
 
         # Batch x (3 * N_filters) x Dim -> Batch x Out_channels x Dim
-        outputs = self.projections[input_type](outputs)
+        outputs_cat = self.projections[input_type](outputs_cat)
 
-        return outputs
+        return outputs_cat, outputs

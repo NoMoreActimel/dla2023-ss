@@ -25,6 +25,7 @@ class BaseDataset(Dataset):
             limit=None,
             max_audio_length=None,
             max_text_length=None,
+            **kwargs
     ):
         self.text_encoder = text_encoder
         self.config_parser = config_parser
