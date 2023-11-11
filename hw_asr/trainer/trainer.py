@@ -33,7 +33,7 @@ class Trainer(BaseTrainer):
             config,
             device,
             dataloaders,
-            text_encoder,
+            text_encoder=None,
             lr_scheduler=None,
             len_epoch=None,
             skip_oom=True,
@@ -129,7 +129,7 @@ class Trainer(BaseTrainer):
                 self.writer.add_scalar(
                     "learning rate", self.lr_scheduler.get_last_lr()[0]
                 )
-                self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
+                # self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
                 self._log_spectrogram(batch["spectrogram"])
                 self._log_audio(batch["audio"])
                 self._log_scalars(self.train_metrics)
@@ -210,7 +210,7 @@ class Trainer(BaseTrainer):
                 )
             self.writer.set_step(epoch * self.len_epoch, part)
             self._log_scalars(self.evaluation_metrics)
-            self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
+            # self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
             self._log_spectrogram(batch["spectrogram"])
             self._log_audio(batch["audio"])
 

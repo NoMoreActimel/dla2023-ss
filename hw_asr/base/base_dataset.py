@@ -18,8 +18,8 @@ class BaseDataset(Dataset):
     def __init__(
             self,
             index,
-            text_encoder: BaseTextEncoder,
             config_parser: ConfigParser,
+            text_encoder: BaseTextEncoder=None,
             wave_augs=None,
             spec_augs=None,
             limit=None,

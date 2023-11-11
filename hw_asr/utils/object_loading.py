@@ -10,7 +10,7 @@ from hw_asr.collate_fn.collate import collate_fn
 from hw_asr.utils.parse_config import ConfigParser
 
 
-def get_dataloaders(configs: ConfigParser, text_encoder: BaseTextEncoder):
+def get_dataloaders(configs: ConfigParser, text_encoder: BaseTextEncoder=None):
     dataloaders = {}
     for split, params in configs["data"].items():
         num_workers = params.get("num_workers", 1)

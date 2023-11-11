@@ -28,15 +28,16 @@ def main(config):
 
     # text_encoder
     text_encoder = config.get_text_encoder()
+    text_encoder = None
 
     # setup data_loader instances
-    dataloaders = get_dataloaders(config, text_encoder)
+    dataloaders = get_dataloaders(config)
 
     # build model architecture, then print to console
     model = config.init_obj(
         config["arch"],
         module_arch,
-        n_class=len(text_encoder),
+        num_speakers=dataloaders["train"].dataset.datasets[0].num_speakers,
         sample_rate=config["preprocessing"]["sr"]
     )
     logger.info(model)

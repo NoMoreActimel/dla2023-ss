@@ -1,7 +1,13 @@
-from hw_asr.model.SpExPlus.SpExPlus_encoder import SpExPlusEncoder
-from hw_asr.model.SpExPlus.SpExPlus_encoder import SpExPlusModel
+from hw_asr.model.SpExPlus.SpExPlus_speech_encoder import SpExPlusTwinSpeechEncoder
+from hw_asr.model.SpExPlus.SpExPlus_speech_decoder import SpExPlusSpeechDecoder
+from hw_asr.model.SpExPlus.SpExPlus_speaker_encoder import SpExPlusSpeakerEncoder
+from hw_asr.model.SpExPlus.SpExPlus_speaker_extractor import SpExPlusSpeakerExtractor
+from hw_asr.model.SpExPlus.SpExPlus_model import SpExPlusModel
 
 __all__ = [
     "SpExPlusModel",
-    "SpExPlusEncoder"
+    "SpExPlusTwinSpeechEncoder",
+    "SpExPlusSpeechDecoder",
+    "SpExPlusSpeakerEncoder",
+    "SpExPlusSpeakerExtractor"
 ]
