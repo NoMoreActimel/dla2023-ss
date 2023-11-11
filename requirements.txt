@@ -17,3 +17,4 @@ pillow
 pypi-kenlm
 
 pyloudnorm
+torchmetrics

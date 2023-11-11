@@ -27,7 +27,7 @@ def main(config):
     logger = config.get_logger("train")
 
     # text_encoder
-    text_encoder = config.get_text_encoder()
+    # text_encoder = config.get_text_encoder()
     text_encoder = None
 
     # setup data_loader instances
@@ -37,7 +37,7 @@ def main(config):
     model = config.init_obj(
         config["arch"],
         module_arch,
-        num_speakers=dataloaders["train"].dataset.datasets[0].num_speakers,
+        num_speakers=dataloaders["train"].dataset.num_speakers,
         sample_rate=config["preprocessing"]["sr"]
     )
     logger.info(model)

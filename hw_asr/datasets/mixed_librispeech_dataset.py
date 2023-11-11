@@ -138,7 +138,7 @@ class LibrispeechMixedDataset(BaseDataset):
             self.num_speakers = len(self.mixed_data_paths["ref"])
 
         ref_paths = self.mixed_data_paths["ref"]
-        mix_paths = self.mixed_data_paths["mix"]
+        mix_paths = self.mixed_data_paths["mixed"]
         target_paths = self.mixed_data_paths["target"]
 
         for ref_path, mix_path, target_path in tqdm(
