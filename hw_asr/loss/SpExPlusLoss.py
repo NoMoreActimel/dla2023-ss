@@ -1,18 +1,20 @@
 import torch
 from torch import nn
 from torch import Tensor
+from torch.nn.modules.loss import _Loss
 
 from typing import Tuple
 
 
-class SpExPlusLoss:
-    """
-    Implementation of SpExPlus loss from
-    https://www.isca-speech.org/archive/pdfs/interspeech_2020/ge20_interspeech.pdf
-    Includes both SI-SDR Loss on predicted denoised audio of the target speaker
-    And Cross-Entropy Loss on predicted speaker logits from speaker encoder part of the model
-    """
+class SpExPlusLoss(_Loss):
     def __init__(self):
+        """
+        Implementation of SpExPlus loss from
+        https://www.isca-speech.org/archive/pdfs/interspeech_2020/ge20_interspeech.pdf
+        Includes both SI-SDR Loss on predicted denoised audio of the target speaker
+        And Cross-Entropy Loss on predicted speaker logits from speaker encoder part of the model
+        """
+        super().__init__()
         self.EPS = 1e-6
         self.CELoss = nn.CrossEntropyLoss()
 
@@ -45,7 +47,7 @@ class SpExPlusLoss:
         for filter, predict in predicts.items():
             predict = predict[mask]
             sisdr_losses[filter] = self.si_sdr(predict, target)
-            
+
         sisdr_loss = 0.8 * sisdr_losses["L1"] + 0.1 * sisdr_losses["L2"] + 0.1 * sisdr_losses["L3"]
 
         ce_loss = self.CELoss(speaker_logits, speaker_id)

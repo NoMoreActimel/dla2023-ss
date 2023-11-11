@@ -64,6 +64,7 @@ class SpExPlusModel(BaseModel):
             n_tcn_blocks: number of TCNBlocks in each stack, default = 8
             causal=False: whether the model is causal
         """
+        super().__init__()
 
         self.speech_encoder = SpExPlusTwinSpeechEncoder(
             L1, L2, L3, n_filters,

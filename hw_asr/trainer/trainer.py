@@ -130,7 +130,7 @@ class Trainer(BaseTrainer):
                     "learning rate", self.lr_scheduler.get_last_lr()[0]
                 )
                 # self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
-                self._log_spectrogram(batch["spectrogram"])
+                # self._log_spectrogram(batch["spectrogram"])
                 self._log_audio(batch["audio"])
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
@@ -156,16 +156,18 @@ class Trainer(BaseTrainer):
         batch = self.move_batch_to_device(batch, self.device)
         if is_train:
             self.optimizer.zero_grad()
-        outputs = self.model(**batch)
-        if type(outputs) is dict:
-            batch.update(outputs)
-        else:
-            batch["logits"] = outputs
+        outputs, speaker_logits = self.model(**batch)
+        batch["predicts"] = outputs
+        batch["speaker_logits"] = speaker_logits
+        # if type(outputs) is dict:
+        #     batch.update(outputs)
+        # else:
+        #     batch["logits"] = outputs
 
-        batch["log_probs"] = F.log_softmax(batch["logits"], dim=-1)
-        batch["log_probs_length"] = self.model.transform_input_lengths(
-            batch["spectrogram_length"]
-        )
+        # batch["log_probs"] = F.log_softmax(batch["logits"], dim=-1)
+        # batch["log_probs_length"] = self.model.transform_input_lengths(
+        #     batch["spectrogram_length"]
+        # )
         batch["loss"] = self.criterion(**batch)
         if is_train:
             batch["loss"].backward()
@@ -211,7 +213,7 @@ class Trainer(BaseTrainer):
             self.writer.set_step(epoch * self.len_epoch, part)
             self._log_scalars(self.evaluation_metrics)
             # self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
-            self._log_spectrogram(batch["spectrogram"])
+            # self._log_spectrogram(batch["spectrogram"])
             self._log_audio(batch["audio"])
 
         # add histogram of model parameters to the tensorboard

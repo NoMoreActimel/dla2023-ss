@@ -55,6 +55,7 @@ def fix_length(s1, s2, min_or_max='max'):
 
 def create_mix(idx, triplet, snr_levels, out_dir, test=False, sr=16000, **kwargs):
     trim_db, vad_db = kwargs["trim_db"], kwargs["vad_db"]
+    audio_length = kwargs["audio_length"]
 
     s1_path = triplet["target"]
     s2_path = triplet["noise"]
@@ -98,8 +99,8 @@ def create_mix(idx, triplet, snr_levels, out_dir, test=False, sr=16000, **kwargs
     snr = np.random.choice(snr_levels, 1).item()
 
     if not test:
-        s1, s2 = vad_merge(s1, vad_db), vad_merge(s2, vad_db)
-        s1_cut, s2_cut = cut_audios(s1, s2, audioLen, sr)  # audioLen from kwargs
+        # s1, s2 = vad_merge(s1, vad_db), vad_merge(s2, vad_db)
+        s1_cut, s2_cut = cut_audios(s1, s2, audio_length, sr)  # audioLen from kwargs
 
         for i in range(len(s1_cut)):
             mix = snr_mixer(s1_cut[i], s2_cut[i], snr)

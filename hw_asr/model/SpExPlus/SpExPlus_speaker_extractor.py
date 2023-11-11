@@ -107,6 +107,8 @@ class TCNBlock(nn.Module):
             causal: if the model is not causal, then we make use of 
             Global Layer Normalization ???
         """
+        super().__init__()
+        
         self.use_speaker_embedding = use_speaker_embedding
         self.speaker_embedding_dim = speaker_embedding_dim
         self.causal = causal
@@ -114,7 +116,7 @@ class TCNBlock(nn.Module):
         self.conv1d_first = nn.Conv1d(
             in_channels=in_channels + speaker_embedding_dim if use_speaker_embedding else in_channels,
             out_channels=conv_channels,
-            kenrel_size=1
+            kernel_size=1
         )
         self.activation_1 = nn.PReLU()
         self.layer_norm_1 = nn.LayerNorm(conv_channels)

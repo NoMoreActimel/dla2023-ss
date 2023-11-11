@@ -2,7 +2,7 @@
     "name": "librispeech_spexplus_test",
     "n_gpu": 1,
     "preprocessing": {
-      "sr": 8000,
+      "sr": 16000,
       "spectrogram": {
         "type": "MelSpectrogram",
         "args": {
@@ -12,42 +12,16 @@
     },
     "augmentations": {
       "wave": [],
-      "spectrogram": [
-        {
-          "type": "FreqMaskingSpecAug",
-          "args": {
-            "prob": 0.4,
-            "max_freq_mask": 20
-          }
-        },
-        {
-          "type": "TimeMaskingSpecAug",
-          "args": {
-            "prob": 0.4,
-            "max_time_mask": 100
-          }
-        },
-        {
-          "type": "TimeStretchSpecAug",
-          "args": {
-            "prob": 0.4,
-            "stretch_min": 0.8,
-            "stretch_max": 1.2,
-            "n_freq": 128
-          }
-        }
-      ]
+      "spectrogram": []
     },
     "arch": {
       "type": "SpExPlusModel",
-      "args": {
-        "num_speakers": 101
-      }
+      "args": {}
     },
     "data": {
       "train": {
         "batch_size": 10,
-        "num_workers": 0,
+        "num_workers": 5,
         "datasets": [
           {
             "type": "LibrispeechMixedDataset",
@@ -62,7 +36,7 @@
       },
       "val": {
         "batch_size": 10,
-        "num_workers": 0,
+        "num_workers": 5,
         "datasets": [
           {
             "type": "LibrispeechMixedDataset",
@@ -87,9 +61,20 @@
       "args": {}
     },
     "metrics": [
+      {
+        "type": "SiSDRMetric",
+        "args": {
+          "name": "Si SDR"
+        }
+      },
+      {
+        "type": "PESQMetric",
+        "args": {
+          "name": "PESQ"
+        }
+      }
     ],
-    "rare_eval_metrics": {
-    },
+    "rare_eval_metrics": {},
     "lr_scheduler": {
       "type": "CosineAnnealingWarmRestarts",
       "args": {

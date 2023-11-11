@@ -42,7 +42,7 @@ class LibrispeechMixedDataset(BaseDataset):
 
         self._data_dir = Path(data_dir)
         self._data_mixed_dir = Path(data_mixed_dir)
-        self._data_write_dir = Path(data_write_dir) if data_write_dir else Path(data_dir)
+        self._data_write_dir = Path(data_write_dir) if data_write_dir else Path(data_mixed_dir)
 
         self.snr_levels = snr_levels
         self.num_workers = num_workers
@@ -105,10 +105,11 @@ class LibrispeechMixedDataset(BaseDataset):
         if not nfiles:
             nfiles = len(speakers_files)
 
-        generator = MixtureGenerator(speakers_files, mixed_path, nfiles, test)
-        generator.generate_mixes(
+        self.generator = MixtureGenerator(speakers_files, mixed_path, nfiles, test)
+        self.generator.generate_mixes(
             self.snr_levels, self.num_workers,
-            update_steps=100, audioLen=self.mixer_audio_length
+            update_steps=100, audio_length=self.mixer_audio_length,
+            trim_db=0, vad_db=0
         )
 
     def _get_or_load_index(self, part):
@@ -130,16 +131,11 @@ class LibrispeechMixedDataset(BaseDataset):
             self._load_part(part)
         
         split_mixed_dir = self._data_mixed_dir / part
-        if not split_mixed_dir.exists():
+        if not split_mixed_dir.exists() or len(os.listdir(split_mixed_dir)) == 0:
             self._load_mixed_part(part, test=self.test)
             # {"ref": [ref_paths], "mix": [mix_paths], "target": [target_paths]}
             self.mixed_data_paths = self.generator.sort_mixes(split_mixed_dir)
-
-            speaker_ids = set()
-            for path in self.mixed_data_paths:
-                if path[-7:] == "ref.wav":
-                    speaker_ids.add(int(path.split(' ')[0]))
-            self.num_speakers = len(speaker_ids)
+            self.num_speakers = len(self.mixed_data_paths["ref"])
 
         ref_paths = self.mixed_data_paths["ref"]
         mix_paths = self.mixed_data_paths["mix"]
@@ -156,3 +152,16 @@ class LibrispeechMixedDataset(BaseDataset):
             })
 
         return index
+
+    @staticmethod
+    def _assert_index_is_valid(index):
+        for entry in index:
+            assert "ref_path" in entry, (
+                "Each dataset item should include field 'ref_path'"
+            )
+            assert "mix_path" in entry, (
+                "Each dataset item should include field 'mix_path'"
+            )
+            assert "target_path" in entry, (
+                "Each dataset item should include field 'target_path'"
+            )

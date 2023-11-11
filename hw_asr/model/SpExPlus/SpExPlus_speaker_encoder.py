@@ -31,7 +31,7 @@ class SpExPlusSpeakerEncoder(BaseModel):
         self.res_maxpool_kernel_size = res_maxpool_kernel_size
         self.n_res_blocks = n_res_blocks
 
-        self.res_blocks = nn.Sequential([
+        self.res_blocks = nn.Sequential(*[
             ResBlock(resblocks_in_dim, resblocks_in_dim, res_maxpool_kernel_size)
             for _ in range(n_res_blocks)
         ])
