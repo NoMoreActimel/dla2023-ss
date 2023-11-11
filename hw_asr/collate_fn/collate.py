@@ -29,3 +29,35 @@ def collate_fn(dataset_items: List[dict]):
         'text': [row['text'] for row in dataset_items],
         'audio_path': dataset_items[0]['audio_path']
     }
+
+
+def mixed_collate_fn(dataset_items: List[dict]):
+    """
+    Collate and pad fields in mixed dataset items
+    """
+    # input fields: [
+    #   "ref_audio", "mix_audio", "target_audio",
+    #   "ref_spectrogram", "mix_spectrogram", "target_spectrogram",
+    #   "ref_path", "mix_path", "target_path",
+    #   "ref_duration", "mix_duration", "target_duration"
+    # ]
+
+    audios = {"ref": [], "input": [], "target": []}
+    lengths = {"ref": [], "input": [], "target": []}
+    speaker_ids = []
+
+    for item in dataset_items:
+        speaker_ids.append(item["speaker_id"])
+        for key in ["ref", "mix", "target"]:
+            audios[key].append(item[f"{key}_audio"])
+            lengths[key].append(item[f"{key}_duration"])
+    
+    return {
+        "input": pad_sequence(audios["input"], batch_first=True),
+        "ref": pad_sequence(audios["ref"], batch_first=True),
+        "target": pad_sequence(audios["target"], batch_first=True),
+        "input_length": torch.tensor(lengths["input"], dtype=torch.int32),
+        "ref_length": torch.tensor(lengths["ref"], dtype=torch.int32),
+        "target_length": torch.tensor(lengths["target"], dtype=torch.int32), 
+        "speaker_id": torch.tensor(speaker_ids, dtype=torch.int32)
+    }
