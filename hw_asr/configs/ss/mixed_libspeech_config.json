@@ -97,10 +97,17 @@
         "T_0": 2000
       }
     },
-    "test": {
+    "trainer": {
+      "epochs": 50,
+      "save_dir": "saved/",
+      "save_period": 5,
       "verbosity": 2,
+      "monitor": "min val_loss",
+      "early_stop": 100,
       "visualize": "wandb",
-      "wandb_project": "asr_project",
-      "wandb_run_name": "ls_ds2_1042_test_clean"
+      "wandb_project": "ss_project",
+      "wandb_run_name": "one_batch_test",
+      "len_epoch": 100,
+      "grad_norm_clip": 10
     }
   }

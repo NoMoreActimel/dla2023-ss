@@ -1,4 +1,4 @@
-from create_mixes import create_mix
+from hw_asr.datasets.mixed_create import create_mix
 
 import random
 import os

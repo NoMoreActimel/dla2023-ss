@@ -2,10 +2,10 @@ import torch
 from torch import nn
 
 from hw_asr.base import BaseModel
-from SpExPlus_speech_encoder import SpExPlusTwinSpeechEncoder
-from SpExPlus_speaker_encoder import SpExPlusSpeakerEncoder
-from SpExPlus_speaker_extractor import SpExPlusSpeakerExtractor
-from SpExPlus_speech_decoder import SpExPlusSpeechDecoder
+from hw_asr.model.SpExPlus.SpExPlus_speech_encoder import SpExPlusTwinSpeechEncoder
+from hw_asr.model.SpExPlus.SpExPlus_speaker_encoder import SpExPlusSpeakerEncoder
+from hw_asr.model.SpExPlus.SpExPlus_speaker_extractor import SpExPlusSpeakerExtractor
+from hw_asr.model.SpExPlus.SpExPlus_speech_decoder import SpExPlusSpeechDecoder
 
 class SpExPlusModel(BaseModel):
     def __init__(

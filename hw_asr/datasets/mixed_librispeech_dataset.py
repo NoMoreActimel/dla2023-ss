@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from hw_asr.base.base_dataset import BaseDataset
 from hw_asr.utils import ROOT_PATH
-from mixed_generator import MixtureGenerator, LibriSpeechSpeakerFiles
+from hw_asr.datasets.mixed_generator import MixtureGenerator, LibriSpeechSpeakerFiles
 
 logger = logging.getLogger(__name__)
 
