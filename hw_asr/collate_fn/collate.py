@@ -32,6 +32,10 @@ def collate_fn(dataset_items: List[dict]):
         lengths["ref"].append(item["ref_audio"].shape[-1])
         lengths["input"].append(item["mix_audio"].shape[-1])
         lengths["target"].append(item["target_audio"].shape[-1])    
+
+    audio_length = dataset_items[0]["audio_length"]
+    audio_lengths = torch.tensor([audio_length], dtype=torch.int32)
+    audio_lengths = audio_lengths.repeat(len(dataset_items))
     
     return {
         "input": pad_sequence(audios["input"], batch_first=True),
@@ -40,5 +44,6 @@ def collate_fn(dataset_items: List[dict]):
         "input_length": torch.tensor(lengths["input"], dtype=torch.int32),
         "ref_length": torch.tensor(lengths["ref"], dtype=torch.int32),
         "target_length": torch.tensor(lengths["target"], dtype=torch.int32), 
-        "speaker_id": torch.tensor(speaker_ids, dtype=torch.int32)
+        "speaker_id": torch.tensor(speaker_ids, dtype=torch.int32),
+        "audio_length": audio_lengths
     }

@@ -34,17 +34,16 @@ class SpExPlusLoss(_Loss):
 
 
     def forward(self, predicts, target, speaker_logits, speaker_id, 
-                input_length, target_length, **batch) -> Tuple[Tensor, Tensor]:
+                audio_length, **batch) -> Tuple[Tensor, Tensor]:
         """
         predicts: dict with predicts by filters "L1", "L2", "L3" 
         target: target audio
         speaker_logits: speaker encoder logits for Cross-Entropy Loss
         speaker_id: target speaker id for Cross-Entropy Loss
-        input_length: length of input audio
-        target_length: length of target audio
+        audio_length: mixed audio length from dataset, used for masking
         """
         sisdr_losses = {}
-        mask = torch.arange(target.shape[1])[None, :] < input_length[:, None]
+        mask = torch.arange(target.shape[1])[None, :] < audio_length[:, None]
         target = target[mask]
         
         for filter, predict in predicts.items():
