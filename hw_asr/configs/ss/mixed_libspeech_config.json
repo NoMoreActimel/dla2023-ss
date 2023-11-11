@@ -70,7 +70,9 @@
       {
         "type": "PESQMetric",
         "args": {
-          "name": "PESQ"
+          "name": "PESQ",
+          "fs": 16000,
+          "mode": "wb"
         }
       }
     ],
