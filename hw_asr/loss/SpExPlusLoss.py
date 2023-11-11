@@ -50,6 +50,6 @@ class SpExPlusLoss(_Loss):
 
         sisdr_loss = 0.8 * sisdr_losses["L1"] + 0.1 * sisdr_losses["L2"] + 0.1 * sisdr_losses["L3"]
 
-        ce_loss = self.CELoss(speaker_logits, speaker_id)
+        ce_loss = self.CELoss(speaker_logits, speaker_id.long())
 
         return sisdr_loss, ce_loss
