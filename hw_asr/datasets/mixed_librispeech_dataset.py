@@ -58,7 +58,14 @@ class LibrispeechMixedDataset(BaseDataset):
                          for part in URL_LINKS if 'train' in part], [])
         else:
             index = self._get_or_load_index(part)
-
+            
+        self.speaker_ids = {}
+        for item in index:
+            speaker_id = int(item["ref_path"].split('/')[-1].split('_')[0])
+            if speaker_id not in self.speaker_ids:
+                self.speaker_ids[speaker_id] = len(self.speaker_ids)
+        self.num_speakers = len(self.speaker_ids)
+        
         super().__init__(index, *args, **kwargs)
 
 
@@ -137,14 +144,6 @@ class LibrispeechMixedDataset(BaseDataset):
             self._load_mixed_part(part, test=self.test)
             # {"ref": [ref_paths], "mix": [mix_paths], "target": [target_paths]}
             self.mixed_data_paths = self.generator.sort_mixes(split_mixed_dir)
-
-            self.speaker_ids = {}
-            for ref_path in self.mixed_data_paths["ref"]:
-                speaker_id = int(ref_path.split('/')[-1].split('_')[0])
-                if speaker_id not in self.speaker_ids:
-                    self.speaker_ids[speaker_id] = len(self.speaker_ids)
-            
-            self.num_speakers = len(self.speaker_ids)
 
         ref_paths = self.mixed_data_paths["ref"]
         mix_paths = self.mixed_data_paths["mixed"]
