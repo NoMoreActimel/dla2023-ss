@@ -7,16 +7,19 @@ from typing import Tuple
 
 
 class SpExPlusLoss(_Loss):
-    def __init__(self):
+    def __init__(self, gamma=10):
         """
         Implementation of SpExPlus loss from
         https://www.isca-speech.org/archive/pdfs/interspeech_2020/ge20_interspeech.pdf
         Includes both SI-SDR Loss on predicted denoised audio of the target speaker
         And Cross-Entropy Loss on predicted speaker logits from speaker encoder part of the model
+        params:
+            gamma: coefficient of Cross-Entropy Loss for speaker encoder
         """
         super().__init__()
         self.EPS = 1e-6
         self.CELoss = nn.CrossEntropyLoss()
+        self.gamma=10
 
     def si_sdr(self, predict, target):
         predict = predict - torch.mean(predict, dim=-1)
@@ -52,4 +55,4 @@ class SpExPlusLoss(_Loss):
 
         ce_loss = self.CELoss(speaker_logits, speaker_id.long())
 
-        return sisdr_loss, ce_loss
+        return sisdr_loss + self.gamma * ce_loss, sisdr_loss, ce_loss

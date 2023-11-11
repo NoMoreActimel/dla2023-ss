@@ -57,10 +57,14 @@ class Trainer(BaseTrainer):
         self.log_step = 50
 
         self.train_metrics = MetricTracker(
-            "loss", "grad norm", *[m.name for m in self.metrics if self._compute_on_train(m)], writer=self.writer
+            "loss", "sisdr_loss", "ce_loss", "speaker_accuracy", "grad norm", 
+            *[m.name for m in self.metrics if self._compute_on_train(m)],
+            writer=self.writer
         )
         self.evaluation_metrics = MetricTracker(
-            "loss", *[m.name for m in self.metrics], writer=self.writer
+            "loss", "sisdr_loss", "ce_loss", "speaker_accuracy",
+            *[m.name for m in self.metrics],
+            writer=self.writer
         )
         self.rare_evaluation_metrics = MetricTracker(
             *[m.name for m in self.rare_eval_metrics], writer=self.writer
@@ -159,6 +163,10 @@ class Trainer(BaseTrainer):
         outputs, speaker_logits = self.model(**batch)
         batch["predicts"] = outputs
         batch["speaker_logits"] = speaker_logits
+        
+        speaker_predicts = torch.softmax(batch["speaker_logits"], dim=1).argmax(dim=1)
+        speaker_accuracy = (speaker_predicts == batch["speaker_id"]).mean()
+
         # if type(outputs) is dict:
         #     batch.update(outputs)
         # else:
@@ -168,7 +176,8 @@ class Trainer(BaseTrainer):
         # batch["log_probs_length"] = self.model.transform_input_lengths(
         #     batch["spectrogram_length"]
         # )
-        batch["loss"] = self.criterion(**batch)
+        batch["loss"], batch["sisdr_loss"], batch["ce_loss"] = self.criterion(**batch)
+
         if is_train:
             batch["loss"].backward()
             self._clip_grad_norm()
@@ -177,6 +186,10 @@ class Trainer(BaseTrainer):
                 self.lr_scheduler.step()
 
         metrics_tracker.update("loss", batch["loss"].item())
+        metrics_tracker.update("sisdr_loss", batch["sisdr_loss"].item())
+        metrics_tracker.update("ce_loss", batch["ce_loss"].item())
+        metrics_tracker.update("speaker_accuracy", speaker_accuracy.item())
+
         for met in self.metrics:
             metrics_tracker.update(met.name, met(**batch))
         
