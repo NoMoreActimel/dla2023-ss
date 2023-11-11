@@ -5,9 +5,9 @@ from torchmetrics.audio.pesq import PerceptualEvaluationSpeechQuality
 from hw_asr.base.base_metric import BaseMetric
 
 class PESQMetricWrapper(BaseMetric):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, fs, mode, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pesq = PerceptualEvaluationSpeechQuality()        
+        self.pesq = PerceptualEvaluationSpeechQuality(fs, mode)        
 
     def __call__(self, predicts, target, **kwargs):
         """

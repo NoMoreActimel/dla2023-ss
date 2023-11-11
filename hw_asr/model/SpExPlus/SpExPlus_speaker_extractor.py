@@ -41,19 +41,21 @@ class SpExPlusSpeakerExtractor(BaseModel):
         """
         super().__init__()
 
-        self.TCN_stacks = nn.Sequential(*[
-            TCNBlock(
-                in_channels=in_channels,
-                conv_channels=tcn_conv_channels,
-                kernel_size=tcn_kernel_size,
-                dilation=tcn_dilation,
-                use_speaker_embedding=(block_idx == 0),
-                speaker_embedding_dim=speaker_embedding_dim,
-                causal=causal
-            )
-            for block_idx in range(n_tcn_blocks)
+        self.TCN_stacks = [
+            [
+                TCNBlock(
+                    in_channels=in_channels,
+                    conv_channels=tcn_conv_channels,
+                    kernel_size=tcn_kernel_size,
+                    dilation=tcn_dilation,
+                    use_speaker_embedding=(block_idx == 0),
+                    speaker_embedding_dim=speaker_embedding_dim,
+                    causal=causal
+                )
+                for block_idx in range(n_tcn_blocks)
+            ]
             for stack_idx in range(n_tcn_stacks)
-        ])
+        ]
 
         self.masks = {
             filter: nn.Conv1d(
@@ -67,7 +69,10 @@ class SpExPlusSpeakerExtractor(BaseModel):
 
 
     def forward(self, input, speaker_embed):
-        output = self.TCN_stacks(input, speaker_embed)
+        for TCN_stack in self.TCN_stacks:
+            for TCN_block in TCN_stack:
+                output = TCN_block(input, speaker_embed)
+        
         masks = {
             filter: self.activation(mask(output))
             for filter, mask in self.masks.items()
@@ -108,7 +113,7 @@ class TCNBlock(nn.Module):
             Global Layer Normalization ???
         """
         super().__init__()
-        
+
         self.use_speaker_embedding = use_speaker_embedding
         self.speaker_embedding_dim = speaker_embedding_dim
         self.causal = causal
@@ -121,9 +126,9 @@ class TCNBlock(nn.Module):
         self.activation_1 = nn.PReLU()
         self.layer_norm_1 = nn.LayerNorm(conv_channels)
 
-        self.dilated_conv_padding = dilation * (kernel_size - 1)
-        if causal:
-            self.dilated_conv_padding //= 2
+        self.dilated_conv_padding = dilation * (kernel_size - 1) // 2
+        # if causal:
+        #     self.dilated_conv_padding //= 2
         
         self.dilated_conv1d = nn.Conv1d(
             in_channels=conv_channels,
@@ -149,13 +154,16 @@ class TCNBlock(nn.Module):
             speaker_embed = torch.unsqueeze(speaker_embed, -1).repeat(1, 1, input.shape[-1])
             output = torch.cat([input, speaker_embed], dim=1)
         
-        output = self.layer_norm_1(self.activation_1(self.conv1d_first(output)))
+        output = self.activation_1(self.conv1d_first(output)).transpose(1, 2)
+        output = self.layer_norm_1(output).transpose(1, 2)
 
         output = self.dilated_conv1d(output)
         if self.causal:
             output = output[:, :, -self.dilated_conv_padding]
         
-        output = self.layer_norm_2(self.activation_2(output))
+        output = self.activation_2(output).transpose(1, 2)
+        output = self.layer_norm_2(output).transpose(1, 2)
+
         output = self.conv1d_last(output)
         output += input
         return output

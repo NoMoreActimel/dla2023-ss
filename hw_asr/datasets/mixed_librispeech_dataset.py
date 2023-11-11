@@ -76,7 +76,7 @@ class LibrispeechMixedDataset(BaseDataset):
             item[f"{key}_path"] = audio_path
             item[f"{key}_duration"] = audio_wave.size(1) / self.config_parser["preprocessing"]["sr"]
 
-        item["speaker_id"] = int(data_dict["ref_path"].split(' ')[0])
+        item["speaker_id"] = int(data_dict["ref_path"].split('/')[-1].split('_')[0])
 
         return item
 
@@ -135,7 +135,13 @@ class LibrispeechMixedDataset(BaseDataset):
             self._load_mixed_part(part, test=self.test)
             # {"ref": [ref_paths], "mix": [mix_paths], "target": [target_paths]}
             self.mixed_data_paths = self.generator.sort_mixes(split_mixed_dir)
-            self.num_speakers = len(self.mixed_data_paths["ref"])
+
+            speaker_ids = set()
+            for ref_path in self.mixed_data_paths["ref"]:
+                speaker_ids.add(int(ref_path.split('/')[-1].split('_')[0]))
+            
+            self.num_speakers = max(speaker_ids)
+            # self.num_speakers = len(self.mixed_data_paths["ref"])
 
         ref_paths = self.mixed_data_paths["ref"]
         mix_paths = self.mixed_data_paths["mixed"]

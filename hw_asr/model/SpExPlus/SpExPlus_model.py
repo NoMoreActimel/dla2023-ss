@@ -91,16 +91,28 @@ class SpExPlusModel(BaseModel):
             L1, L2, L3, n_filters
         )
     
-    def forward(self, input, ref, ref_length):
+    def _unsqueeze_inputs(self, input, ref):
         if len(input.shape) == 1:
             input = input.unsqueeze(0)
+        if len(input.shape) == 2:
+            input = input.unsqueeze(1)
+        if len(ref.shape) == 1:
+            ref = ref.unsqueeze(0)
+        if len(ref.shape) == 2:
+            ref = ref.unsqueeze(1)
+
+        return input, ref
+
+    
+    def forward(self, input, ref, ref_length, **batch):
+        input, ref = self._unsqueeze_inputs(input, ref)
         
         input_length = input.shape[-1]
         
         input_encoded, input_encoded_by_filters = self.speech_encoder(input, input_type="mixed")
-        ref_encoded = self.speech_encoder(ref, input_type="ref")
+        ref_encoded, ref_encoded_by_filters = self.speech_encoder(ref, input_type="ref")
 
-        ref_time_length = (ref_length - self.speech_encoder.L1) // (self.speech_encoder // 2) + 1
+        ref_time_length = (ref_length - self.speech_encoder.L1) // (self.speech_encoder.L1 // 2) + 1
         speaker_embed, speaker_logits = self.speaker_encoder(ref_encoded, ref_time_length)
 
         masks = self.speaker_extractor(input_encoded, speaker_embed)

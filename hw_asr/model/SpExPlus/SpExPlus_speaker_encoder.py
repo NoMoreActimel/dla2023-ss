@@ -31,10 +31,17 @@ class SpExPlusSpeakerEncoder(BaseModel):
         self.res_maxpool_kernel_size = res_maxpool_kernel_size
         self.n_res_blocks = n_res_blocks
 
-        self.res_blocks = nn.Sequential(*[
-            ResBlock(resblocks_in_dim, resblocks_in_dim, res_maxpool_kernel_size)
-            for _ in range(n_res_blocks)
-        ])
+        self.res_blocks = nn.Sequential(
+            *[
+                ResBlock(resblocks_in_dim, resblocks_in_dim, res_maxpool_kernel_size)
+                for _ in range(n_res_blocks // 2)
+            ],
+            ResBlock(resblocks_in_dim, resblocks_out_dim, res_maxpool_kernel_size),
+            *[
+                ResBlock(resblocks_out_dim, resblocks_out_dim, res_maxpool_kernel_size)
+                for _ in range((n_res_blocks - 1) // 2)
+            ],
+        )
 
         self.conv1d = nn.Conv1d(
             in_channels=resblocks_out_dim,
@@ -46,8 +53,7 @@ class SpExPlusSpeakerEncoder(BaseModel):
 
     def forward(self, input, input_time_length):
         output = self.res_blocks(input)
-        output = self.conv1d(input)
-        speaker_logits = self.fc(output)
+        output = self.conv1d(output)
         
         # count new TimeDim, changed in MaxPool1d in each ResBlock
         time_reduction_coeff = (self.res_maxpool_kernel_size) ** self.n_res_blocks
@@ -55,6 +61,8 @@ class SpExPlusSpeakerEncoder(BaseModel):
 
         output_norm_factor = output_time_length.float().view(-1, 1)
         speaker_embed = output.sum(-1) / output_norm_factor
+        
+        speaker_logits = self.fc(speaker_embed)
 
         return speaker_embed, speaker_logits
 

@@ -76,7 +76,6 @@
         }
       }
     ],
-    "rare_eval_metrics": {},
     "lr_scheduler": {
       "type": "CosineAnnealingWarmRestarts",
       "args": {

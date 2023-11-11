@@ -18,3 +18,4 @@ pypi-kenlm
 
 pyloudnorm
 torchmetrics
+pesq

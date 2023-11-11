@@ -31,7 +31,7 @@ class SpExPlusTwinSpeechEncoder(BaseModel):
                 in_channels=1,
                 out_channels=n_filters,
                 kernel_size=getattr(self, filter),
-                stride=getattr(self, filter) // 2
+                stride=L1 // 2
             )
             for filter in ["L1", "L2", "L3"]
         }
@@ -68,8 +68,8 @@ class SpExPlusTwinSpeechEncoder(BaseModel):
         input_time_length = input.shape[-1]
         dim_length = outputs["L1"].shape[-1]
 
-        L2_padding = input_time_length - ((dim_length - 1) * (self.L1 // 2) + self.L2)
-        L3_padding = input_time_length - ((dim_length - 1) * (self.L1 // 2) + self.L3)
+        L2_padding = ((dim_length - 1) * (self.L1 // 2) + self.L2) - input_time_length
+        L3_padding = ((dim_length - 1) * (self.L1 // 2) + self.L3) - input_time_length
 
         # add L2_padding and L3_padding zeroes to the end of last dim
         input_l2 = nn.functional.pad(input, pad=(0, L2_padding))
@@ -82,7 +82,9 @@ class SpExPlusTwinSpeechEncoder(BaseModel):
         outputs_cat = torch.cat([outputs["L1"], outputs["L2"], outputs["L3"]], dim=1)
 
         # use specific layer norm for mixed and ref audios
+        outputs_cat = outputs_cat.transpose(1, 2)
         outputs_cat = self.encoder_layer_norms[input_type](outputs_cat)
+        outputs_cat = outputs_cat.transpose(1, 2)
 
         # Batch x (3 * N_filters) x Dim -> Batch x Out_channels x Dim
         outputs_cat = self.projections[input_type](outputs_cat)

@@ -41,7 +41,7 @@ class SpExPlusLoss(_Loss):
         target_length: length of target audio
         """
         sisdr_losses = {}
-        mask = torch.arange(input_length)[None, :] < input_length[:, None]
+        mask = torch.arange(target.shape[1])[None, :] < input_length[:, None]
         target = target[mask]
         
         for filter, predict in predicts.items():
