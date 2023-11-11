@@ -54,4 +54,4 @@ class SpExPlusLoss(_Loss):
 
         ce_loss = self.CELoss(speaker_logits, speaker_id.long())
 
-        return sisdr_loss + self.gamma * ce_loss, sisdr_loss, ce_loss
+        return -sisdr_loss + self.gamma * ce_loss, -sisdr_loss, ce_loss
