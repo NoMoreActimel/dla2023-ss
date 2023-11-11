@@ -43,7 +43,7 @@ class SpExPlusLoss(_Loss):
         audio_length: mixed audio length from dataset, used for masking
         """
         sisdr_losses = {}
-        mask = torch.arange(target.shape[1])[None, :] < audio_length[:, None]
+        mask = torch.arange(target.shape[1], device=target.device)[None, :] < audio_length[:, None]
         target = target[mask]
         
         for filter, predict in predicts.items():

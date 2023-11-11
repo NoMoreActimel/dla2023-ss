@@ -12,7 +12,10 @@ class SiSDRMetricWrapper(BaseMetric):
     def __call__(self, predicts, target, **kwargs):
         """
         predicts: dict of model predicts by L1, L2 and L3 filters 
-        """
+        """        
+        if self.si_sdr.device != target.device:
+            self.si_sdr = self.si_sdr.to(target.device)
+
         si_sdrs = {}
         for filter, predict in predicts.items():
             si_sdrs[filter] = self.si_sdr(predict, target)

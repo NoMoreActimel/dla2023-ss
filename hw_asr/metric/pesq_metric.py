@@ -13,6 +13,9 @@ class PESQMetricWrapper(BaseMetric):
         """
         predicts: dict of model predicts by L1, L2 and L3 filters 
         """
+        if self.pesq.device != target.device:
+            self.pesq = self.pesq.to(target.device)
+
         pesqs = {}
         for filter, predict in predicts.items():
             pesqs[filter] = self.pesq(predict, target)
