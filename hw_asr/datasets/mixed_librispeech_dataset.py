@@ -78,6 +78,7 @@ class LibrispeechMixedDataset(BaseDataset):
 
         speaker_id = int(data_dict["ref_path"].split('/')[-1].split('_')[0])
         item["speaker_id"] = self.speaker_ids[speaker_id]
+        item["audio_length"] = self.mixer_audio_length
 
         return item
 
