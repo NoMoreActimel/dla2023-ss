@@ -25,15 +25,15 @@ class SpExPlusLoss(_Loss):
         predict = predict - torch.mean(predict, dim=-1)
         target = target - torch.mean(target, dim=-1)
 
-        alpha = (target * predict).sum(dim=-1) / torch.norm(target) ** 2
+        alpha = torch.sum(target * predict, dim=-1) / torch.linalg.norm(target, dim=-1) ** 2
 
-        numerator = torch.linalg.norm(alpha * target)
-        denominator = torch.linalg.norm(alpha * target - predict) + self.EPS
+        numerator = torch.linalg.norm(alpha * target, dim=-1)
+        denominator = torch.linalg.norm(alpha * target - predict, dim=-1) + self.EPS
 
         return 20 * torch.log10(numerator / denominator + self.EPS)
 
 
-    def forward(self, predicts, target, speaker_logits, speaker_id, 
+    def forward(self, predicts, targets, speaker_logits, speaker_id, 
                 audio_length, **batch) -> Tuple[Tensor, Tensor]:
         """
         predicts: dict with predicts by filters "L1", "L2", "L3" 
@@ -42,14 +42,16 @@ class SpExPlusLoss(_Loss):
         speaker_id: target speaker id for Cross-Entropy Loss
         audio_length: mixed audio length from dataset, used for masking
         """
-        sisdr_losses = {}
-        mask = torch.arange(target.shape[1], device=target.device)[None, :] < audio_length[:, None]
-        target = target[mask]
-        
-        for filter, predict in predicts.items():
-            predict = predict[mask]
-            sisdr_losses[filter] = self.si_sdr(predict, target)
+        n = targets.shape[0]
 
+        sisdr_losses = {}
+        mask = torch.arange(targets.shape[1], device=targets.device)[None, :] < audio_length[:, None]
+        targets = targets[mask]
+        
+        for filter, filter_predicts in predicts.items():
+            filter_predicts = filter_predicts[mask]
+            sisdr_losses[filter] = self.si_sdr(filter_predicts, targets) / n
+            
         sisdr_loss = 0.8 * sisdr_losses["L1"] + 0.1 * sisdr_losses["L2"] + 0.1 * sisdr_losses["L3"]
 
         ce_loss = self.CELoss(speaker_logits, speaker_id.long())
