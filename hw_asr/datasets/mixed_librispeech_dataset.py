@@ -28,7 +28,7 @@ URL_LINKS = {
 class LibrispeechMixedDataset(BaseDataset):
     def __init__(
             self, part, data_dir=None, mixed_dir=None, data_write_dir=None, 
-            snr_levels=[-5, 5], num_workers=5, mixer_audio_length=3, test=False, *args, **kwargs
+            snr_levels=[-5, 5], num_workers=5, mixer_audio_length=4, test=False, *args, **kwargs
             ):
         assert part in URL_LINKS or part == 'train_all'
 

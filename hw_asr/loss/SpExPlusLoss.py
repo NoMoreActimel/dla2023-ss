@@ -7,7 +7,7 @@ from typing import Tuple
 
 
 class SpExPlusLoss(_Loss):
-    def __init__(self, gamma=10):
+    def __init__(self, gamma=1):
         """
         Implementation of SpExPlus loss from
         https://www.isca-speech.org/archive/pdfs/interspeech_2020/ge20_interspeech.pdf
@@ -19,7 +19,7 @@ class SpExPlusLoss(_Loss):
         super().__init__()
         self.EPS = 1e-6
         self.CELoss = nn.CrossEntropyLoss()
-        self.gamma=10
+        self.gamma = gamma
 
     def si_sdr(self, predict, target):
         predict = predict - torch.mean(predict, dim=-1)

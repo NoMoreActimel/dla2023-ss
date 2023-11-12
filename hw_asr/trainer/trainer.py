@@ -153,6 +153,9 @@ class Trainer(BaseTrainer):
             log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
             if do_rare_eval:
                 log.update(**{f"{part}_{name}": value for name, value in rare_val_log.items()})
+        
+        if isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            self.lr_scheduler.step(val_log["loss"])
 
         return log
 
@@ -186,7 +189,8 @@ class Trainer(BaseTrainer):
             self._clip_grad_norm()
             self.optimizer.step()
             if self.lr_scheduler is not None:
-                self.lr_scheduler.step()
+                if not isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    self.lr_scheduler.step()
 
         metrics_tracker.update("loss", batch["loss"].item())
         metrics_tracker.update("sisdr_loss", batch["sisdr_loss"].item())
