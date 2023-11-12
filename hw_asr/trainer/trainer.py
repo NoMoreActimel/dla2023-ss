@@ -131,9 +131,13 @@ class Trainer(BaseTrainer):
                         epoch, self._progress(batch_idx), batch["loss"].item()
                     )
                 )
-                self.writer.add_scalar(
-                    "learning rate", self.lr_scheduler.get_last_lr()[0]
-                )
+
+                if isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    last_lr = self.lr_scheduler._last_lr
+                else:
+                    last_lr = self.lr_scheduler.get_last_lr()[0]
+                    
+                self.writer.add_scalar("learning rate", last_lr)
                 # self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
                 # self._log_spectrogram(batch["spectrogram"])
                 self._log_audio(batch["input"], "mixed_audio")
