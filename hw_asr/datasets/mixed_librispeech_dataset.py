@@ -128,7 +128,6 @@ class LibrispeechMixedDataset(BaseDataset):
                 index = json.load(f)
         else:
             index = self._create_mixed_index(part)
-            index_path.mkdir(exist_ok=True, parents=True)
             with index_path.open("w") as f:
                 json.dump(index, f, indent=2)
         return index
