@@ -133,10 +133,10 @@ class Trainer(BaseTrainer):
                 )
 
                 if isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-                    last_lr = self.lr_scheduler._last_lr
+                    last_lr = self.optimizer.param_groups[0]['lr']
                 else:
                     last_lr = self.lr_scheduler.get_last_lr()[0]
-                    
+
                 self.writer.add_scalar("learning rate", last_lr)
                 # self._log_predictions(**batch, log_rare_metrics=do_rare_eval)
                 # self._log_spectrogram(batch["spectrogram"])
