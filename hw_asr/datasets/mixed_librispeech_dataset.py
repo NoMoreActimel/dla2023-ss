@@ -44,6 +44,9 @@ class LibrispeechMixedDataset(BaseDataset):
         self._data_mixed_dir = Path(data_mixed_dir)
         self._data_write_dir = Path(data_write_dir) if data_write_dir else Path(data_mixed_dir)
 
+        if not self._data_write_dir.exists():
+            self._data_write_dir.mkdir(exist_ok=True, parents=True)
+
         self.snr_levels = snr_levels
         self.num_workers = num_workers
         self.mixer_audio_length = mixer_audio_length
