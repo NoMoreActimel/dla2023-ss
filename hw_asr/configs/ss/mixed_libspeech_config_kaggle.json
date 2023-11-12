@@ -28,8 +28,8 @@
             "args": {
               "part": "train-clean-100",
               "data_dir": "/kaggle/input/librispeech/train-clean-100/LibriSpeech",
-              "data_mixed_dir": "/kaggle/working/dla2023-asr/data/librispeech-mixed",
-              "data_write_dir": "/kaggle/working/dla2023-asr/data/librispeech-index",
+              "data_mixed_dir": "/kaggle/working/dla2023-ss/data/librispeech-mixed",
+              "data_write_dir": "/kaggle/working/dla2023-ss/data/librispeech-index",
               "mixer_audio_length": 4,
               "snr_levels": [0, 5]
             }
@@ -45,8 +45,8 @@
             "args": {
               "part": "test-clean",
               "data_dir": "/kaggle/input/librispeech/test-clean/LibriSpeech",
-              "data_mixed_dir": "/kaggle/working/dla2023-asr/data/librispeech-mixed",
-              "data_write_dir": "/kaggle/working/dla2023-asr/data/librispeech-index",
+              "data_mixed_dir": "/kaggle/working/dla2023-ss/data/librispeech-mixed",
+              "data_write_dir": "/kaggle/working/dla2023-ss/data/librispeech-index",
               "mixer_audio_length": 4,
               "snr_levels": [0, 5]
             }
