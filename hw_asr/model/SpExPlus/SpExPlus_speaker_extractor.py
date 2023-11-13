@@ -67,8 +67,9 @@ class SpExPlusSpeakerExtractor(BaseModel):
 
 
     def forward(self, input, speaker_embed):
+        output = input
         for TCN_block in self.TCN_stacks:
-            output = TCN_block(input, speaker_embed)
+            output = TCN_block(output, speaker_embed)
         
         masks = {
             filter: self.activation(mask(output))
