@@ -17,9 +17,9 @@
     "arch": {
       "type": "SpExPlusModel",
       "args": {
-        "L1": 40,
-        "L2": 160,
-        "L3": 320,
+        "L1": 20,
+        "L2": 80,
+        "L3": 160,
         "n_filters": 256,
         "encoder_out_dim": 256,
         "speaker_encoder_hidden_dim": 512,
@@ -39,7 +39,7 @@
               "data_dir": "/kaggle/input/librispeech/train-clean-100/LibriSpeech",
               "data_mixed_dir": "/kaggle/working/dla2023-ss/data/librispeech-mixed",
               "data_write_dir": "/kaggle/working/dla2023-ss/data/librispeech-index",
-              "mixer_audio_length": 4,
+              "mixer_audio_length": 3,
               "snr_levels": [-5, 5]
             }
           }
@@ -56,7 +56,7 @@
               "data_dir": "/kaggle/input/librispeech/test-clean/LibriSpeech",
               "data_mixed_dir": "/kaggle/working/dla2023-ss/data/librispeech-mixed",
               "data_write_dir": "/kaggle/working/dla2023-ss/data/librispeech-index",
-              "mixer_audio_length": 4,
+              "mixer_audio_length": 3,
               "snr_levels": [0]
             }
           }
