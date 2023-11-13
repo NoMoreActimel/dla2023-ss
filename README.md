@@ -25,13 +25,13 @@ pip install -r ./requirements.txt
 
 You may now launch training / testing of the model, specifying the config file. The default model config is given as default_test_config.json. However, you may check for other examples in hw_asr/configs directory.
 
-There is no good-enough pretrained model, as I was mainly debugging model architecture on the short-term launches. It appeared to be, that basically to achieve comparable perfomance you need to train 10s or 100s of times more, so I didn't made it till the deadline.
+There is **no good-enough pretrained model**, as I was mainly debugging model architecture on the short-term launches. It appeared to be, that basically to achieve comparable perfomance you need to train 10's or 100's of times more, so I didn't made it till the deadline. After examining first stages of training and comparing them with other students, I assume that the architecture is clean of bugs. Probably I will add the pretrained model afterwards, if I won't reach computational limits.
 
 
-Overall, to launch pretrained model you need to download the [model-checkpoint](https://drive.google.com/drive/folders/1uE4WQs2Rjczn2t49ELcBMxjFijinG-Er?usp=sharing) and launch the test.py:
+Overall, to launch pretrained model you need to download the model-checkpoint and launch the test.py:
 ```shell
 pip install gdown
-gdown --folder https://drive.google.com/drive/folders/1uE4WQs2Rjczn2t49ELcBMxjFijinG-Er
+gdown --folder [to-be-done]
 unzip checkpoint-best/checkpoint-best.zip checkpoint.pth
 mv checkpoint.pth default_test_model/checkpoint.pth
 mv checkpoint-best/config.json default_test_model/config.json
@@ -67,14 +67,3 @@ Some basic tests are located in hw_asr/tests directory. Script to run them:
 ```shell
 python3 -m unittest discover hw_asr/tests
 ```
-
-LibriSpeech test-clean results:
-
-WER argmax: 0.24
-
-CER argmax: 0.07
-
-\
-WER lm-beamsearch with beamwidth = 5: 0.18
-
-CER lm-beamsearch with beamwidth = 5: 0.07
