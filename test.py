@@ -7,9 +7,8 @@ import torch
 from tqdm import tqdm
 
 import hw_asr.model as module_model
-from hw_asr.metric import ArgmaxCERMetric, ArgmaxWERMetric
-from hw_asr.metric import BeamsearchCERMetric, BeamsearchWERMetric
-from hw_asr.text_encoder import CTCCharTextEncoder
+from hw_asr.loss import SpExPlusLoss
+from hw_asr.metric import SiSDRMetric, PESQMetric
 from hw_asr.trainer import Trainer
 from hw_asr.utils import ROOT_PATH
 from hw_asr.utils.object_loading import get_dataloaders
@@ -46,73 +45,35 @@ def main(config, out_file):
     model.eval()
 
     results = []
-    
-    wer_argmax = ArgmaxWERMetric(text_encoder)
-    cer_argmax = ArgmaxCERMetric(text_encoder)
 
-    beam_search = None
-    if isinstance(text_encoder, CTCCharTextEncoder):
-        wer_beamsearch = BeamsearchWERMetric(text_encoder)
-        cer_beamsearch = BeamsearchCERMetric(text_encoder)
+    loss = SpExPlusLoss()
+    sisdr_metric = SiSDRMetric()
+    pesq_metric = PESQMetric()
 
-        if text_encoder.use_lm:
-            beam_search = text_encoder.ctc_lm_beam_search
-        else:
-            beam_search = text_encoder.ctc_beam_search
-    
-    wers = {"beamsearch": [], "argmax": []}
-    cers = {"beamsearch": [], "argmax": []}
+    n = 0
+    losses = 0.
+    sisdrs = 0.
+    pesqs = 0.
 
     with torch.no_grad():
         for batch_num, batch in enumerate(tqdm(dataloaders["test"])):
             batch = Trainer.move_batch_to_device(batch, device)
-            output = model(**batch)
-            if type(output) is dict:
-                batch.update(output)
-            else:
-                batch["logits"] = output
-            batch["log_probs"] = torch.log_softmax(batch["logits"], dim=-1)
-            batch["log_probs_length"] = model.transform_input_lengths(
-                batch["spectrogram_length"]
-            )
-            batch["probs"] = batch["log_probs"].exp().cpu()
-            batch["argmax"] = batch["probs"].argmax(-1)
+            output, _ = model(**batch)
+            batch["predicts"] = output
 
-            beam_search_results = None
-            if isinstance(text_encoder, CTCCharTextEncoder) and text_encoder.use_lm:
-                beam_search_results = text_encoder.ctc_lm_beam_search(
-                    batch["log_probs"], batch["log_probs_length"],
-                )
-                wers["beamsearch"].append(wer_beamsearch(**batch))
-                cers["beamsearch"].append(cer_beamsearch(**batch))
-            
-            wers["argmax"].append(wer_argmax(**batch))
-            cers["argmax"].append(cer_argmax(**batch))
+            sisdr_loss, _, _ = loss(**batch)
+            sisdr = sisdr_metric(**batch)
+            pesq = pesq_metric(**batch)
 
-            for i in range(len(batch["text"])):
-                argmax = batch["argmax"][i]
-                argmax = argmax[: int(batch["log_probs_length"][i])]
-
-                results.append({
-                    "ground_trurh": batch["text"][i],
-                    "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
-                })
-
-                if isinstance(text_encoder, CTCCharTextEncoder):
-                    if text_encoder.use_lm:
-                        beam_search_res = beam_search_results[i]
-                    else:
-                        beam_search_res = text_encoder.ctc_beam_search(
-                            batch["log_probs"][i], batch["log_probs_length"][i],
-                        )[:10]
-                    
-                    results[-1].update({"pred_text_beam_search": beam_search_res})
+            losses.append(sisdr_loss)
+            sisdrs.append(sisdr)
+            pesqs.append(pesq)
+            n += 1
     
     results.append({
-        "WER (beamsearch)": sum(wers["beamsearch"]) / len(wers["beamsearch"]),
-        "CER (beamsearch)": sum(cers["beamsearch"]) / len(cers["beamsearch"]),
-        "WER (argmax)": sum(wers["argmax"]) / len(wers["argmax"]),
-        "CER (argmax)": sum(cers["argmax"]) / len(cers["argmax"])
+        "SiSDR manual": -losses / n,
+        "SiSDR torch": sisdrs / n,
+        "PESQ torch": pesqs / n,
     })
 
     with Path(out_file).open("w") as f:

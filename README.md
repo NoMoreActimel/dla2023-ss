@@ -1,13 +1,13 @@
-# ASR project
+# SS project
 
-This is a repository with the ASR homework of the HSE DLA Course. It includes the implementation of DeepSpeechV2 model architecture and all training utilities. The training was performed on the [LibriSpeech](https://www.openslr.org/12) dataset, train-clean-100/360 and train-other-500 in particular.
+This is a repository with the SS homework of the HSE DLA Course. It includes the implementation of SpEx+ model architecture and all training utilities. The training was performed on the [LibriSpeech](https://www.openslr.org/12) train-clean-100 dataset, by artificially mixing pairs of audios.
 
 ## Installation guide
 
 Clone the repository:
 ```shell
 %cd local/cloned/project/path
-git clone https://github.com/NoMoreActimel/dla2023-asr.git
+git clone https://github.com/NoMoreActimel/dla2023-ss.git
 ```
 
 Install and create pyenv:
@@ -23,21 +23,10 @@ Install required packages:
 pip install -r ./requirements.txt
 ```
 
-Run following commands to install beamseach language model:
-
-```shell
-wget https://openslr.elda.org/resources/11/4-gram.arpa.gz
-gzip -d 4-gram.arpa.gz
-mkdir -p data/librispeech-lm/
-mv 4-gram.arpa data/librispeech-lm/
-```
-
-If you are specifiying external datasets in your config file and they are available in read-only mode, then you need to create index-directory for the internal dataset processing:
-```shell
-mkdir -p data/librispeech-index
-```
-
 You may now launch training / testing of the model, specifying the config file. The default model config is given as default_test_config.json. However, you may check for other examples in hw_asr/configs directory.
+
+There is no good-enough pretrained model, as I was mainly debugging model architecture on the short-term launches. It appeared to be, that basically to achieve comparable perfomance you need to train 10s or 100s of times more, so I didn't made it till the deadline.
+
 
 Overall, to launch pretrained model you need to download the [model-checkpoint](https://drive.google.com/drive/folders/1uE4WQs2Rjczn2t49ELcBMxjFijinG-Er?usp=sharing) and launch the test.py:
 ```shell
@@ -58,12 +47,7 @@ python test.py \
 
 ## Structure
 
-All written code is located in the hw_asr repository. Scripts launching training and testing are given as train.py and test.py in the root project directory. First one will call the trainer instance, which is the class used for training the model. Further on, trainer and base_trainer iterate over given datasets and log all provided metrics - main ones are Word Error Rate and Character Error Rate. For the convenience everything is getting logged using the wandb logger, you may also look for spectrograms, audios and many interesting model-weights graphs out there.
-
-In order to improve the WER/CER metrics further, basical beamsearch algorithm has been implemented. However, the supported version of beam-search with language model guidance from pyctcdecode library works faster and generally significantly better. You can find both beamsearches in hw_asr/text_encoder/ctc_char_text_encoder.py
-
-Due to the computational cost and time limitations, DeepSpeechV2 architecture was used with 5 Bidirectional-LSTM layers and hidden_size=512 (which is doubled to 1024 in Bidirectional-LSTM).
-
+All written code is located in the hw_asr (heh) repository. Scripts launching training and testing are given as train.py and test.py in the root project directory. First one will call the trainer instance, which is the class used for training the model. Further on, trainer and base_trainer iterate over given datasets and log all provided metrics - main ones are SiSDR and PESQ from torchmetrics.audio. SiSDR has been also implemented manually and incorporated into the overall loss of the model. For the convenience everything is getting logged using the wandb logger, you may also look audios and many interesting model-weights graphs out there.
 
 ## Training
 
@@ -73,7 +57,7 @@ python3 train.py -c hw_asr/configs/config_name.json
 ```
 If you want to proceed training process from the saved checkpoint, then:
 ```shell
-python3 train.py -c hw_asr/configs/config_name.json -p saved/checkpoint/path.pth
+python3 train.py -c hw_asr/configs/config_name.json -r saved/checkpoint/path.pth
 ```
 
 ## Testing

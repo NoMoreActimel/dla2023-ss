@@ -33,14 +33,21 @@ class SpExPlusLoss(_Loss):
         return 20 * torch.log10(numerator / denominator + self.EPS)
 
 
-    def forward(self, predicts, target, speaker_logits, speaker_id, 
-                audio_length, **batch) -> Tuple[Tensor, Tensor]:
+    def forward(self, predicts, target, audio_length, speaker_logits=None, speaker_id=None, 
+                eval_mode=False, **batch) -> Tuple[Tensor, Tensor]:
         """
         predicts: dict with predicts by filters "L1", "L2", "L3" 
         target: target audio
         speaker_logits: speaker encoder logits for Cross-Entropy Loss
         speaker_id: target speaker id for Cross-Entropy Loss
         audio_length: mixed audio length from dataset, used for masking
+
+        in train mode returns -SiSDR + self.gamma * CELoss, -SiSDR, CELoss
+        in eval mode returns -SiSDR, -SiSDR, 0.
+
+        such strange behaviour is implemented for the case of different train-val datasets
+        so there might be speaker_ids from validation part that are absent 
+        in the speaker_logits from model
         """
         n = target.shape[0]
 
@@ -54,6 +61,9 @@ class SpExPlusLoss(_Loss):
             
         sisdr_loss = 0.8 * sisdr_losses["L1"] + 0.1 * sisdr_losses["L2"] + 0.1 * sisdr_losses["L3"]
 
-        ce_loss = self.CELoss(speaker_logits, speaker_id.long())
+        if eval_mode:
+            ce_loss = 0.
+        else:
+            ce_loss = self.CELoss(speaker_logits, speaker_id.long())
 
         return -sisdr_loss + self.gamma * ce_loss, -sisdr_loss, ce_loss
