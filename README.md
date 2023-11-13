@@ -1,4 +1,4 @@
-# Speach Separation Homework
+# Source Separation Homework
 
 This is a repository with the SS homework of the HSE DLA Course. It includes the implementation of SpEx+ model architecture and all training utilities. The training was performed on the [LibriSpeech](https://www.openslr.org/12) train-clean-100 dataset, by artificially mixing pairs of audios.
 
