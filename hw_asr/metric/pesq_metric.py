@@ -16,9 +16,12 @@ class PESQMetricWrapper(BaseMetric):
         if self.pesq.device != target.device:
             self.pesq = self.pesq.to(target.device)
 
-        pesqs = {}
-        for filter, predict in predicts.items():
-            pesqs[filter] = self.pesq(predict, target)
+        try:
+            pesqs = {}
+            for filter, predict in predicts.items():
+                pesqs[filter] = self.pesq(predict, target)
+        except:
+            return torch.tensor(-1.)
         
         pesq = 0.8 * pesqs["L1"] + 0.1 * pesqs["L2"] + 0.1 * pesqs["L3"]
         return pesq
