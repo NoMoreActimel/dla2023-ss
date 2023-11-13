@@ -41,6 +41,9 @@ class SpExPlusSpeakerExtractor(BaseModel):
         """
         super().__init__()
 
+        self.n_tcn_blocks = n_tcn_blocks
+        self.n_tcn_stacks = n_tcn_stacks
+
         self.TCN_stacks = nn.ModuleList([
             TCNBlock(
                 in_channels=in_channels,
@@ -67,9 +70,16 @@ class SpExPlusSpeakerExtractor(BaseModel):
 
 
     def forward(self, input, speaker_embed):
+        prev_output = input
         output = input
-        for TCN_block in self.TCN_stacks:
+
+        for block_idx, TCN_block in enumerate(self.TCN_stacks):
             output = TCN_block(output, speaker_embed)
+
+            # add skip-connections after each TCN stack
+            if (block_idx + 1) % self.n_tcn_blocks == 0:
+                output += prev_output
+                prev_output = output
         
         masks = {
             filter: self.activation(mask(output))
@@ -122,11 +132,11 @@ class TCNBlock(nn.Module):
             kernel_size=1
         )
         self.activation_1 = nn.PReLU()
-        self.layer_norm_1 = nn.LayerNorm(conv_channels)
+        self.layer_norm_1 = LayerNorm(causal, conv_channels)
 
         self.dilated_conv_padding = dilation * (kernel_size - 1) // 2
-        # if causal:
-        #     self.dilated_conv_padding //= 2
+        if causal:
+            self.dilated_conv_padding //= 2
         
         self.dilated_conv1d = nn.Conv1d(
             in_channels=conv_channels,
@@ -137,7 +147,7 @@ class TCNBlock(nn.Module):
             padding=self.dilated_conv_padding
         )
         self.activation_2 = nn.PReLU()
-        self.layer_norm_2 = nn.LayerNorm(conv_channels)
+        self.layer_norm_2 = LayerNorm(causal, conv_channels)
 
         self.conv1d_last = nn.Conv1d(
             in_channels=conv_channels,
@@ -152,16 +162,39 @@ class TCNBlock(nn.Module):
             speaker_embed = torch.unsqueeze(speaker_embed, -1).repeat(1, 1, input.shape[-1])
             output = torch.cat([input, speaker_embed], dim=1)
         
-        output = self.activation_1(self.conv1d_first(output)).transpose(1, 2)
-        output = self.layer_norm_1(output).transpose(1, 2)
+        output = self.activation_1(self.conv1d_first(output))
+        output = self.layer_norm_1(output)
 
         output = self.dilated_conv1d(output)
         if self.causal:
             output = output[:, :, -self.dilated_conv_padding]
         
-        output = self.activation_2(output).transpose(1, 2)
-        output = self.layer_norm_2(output).transpose(1, 2)
+        output = self.activation_2(output)
+        output = self.layer_norm_2(output)
 
         output = self.conv1d_last(output)
         output += input
+        return output
+    
+
+class LayerNorm(nn.Module):
+    def __init__(self, causal, norm_shape):
+        super().__init__()
+        self.causal = causal
+        self.EPS = 1e-6
+
+        if causal:
+            self.layer_norm = nn.LayerNorm(norm_shape)
+        else:
+            self.gamma = nn.Parameter(torch.ones(norm_shape, 1))
+            self.beta = nn.Parameter(torch.zeros(norm_shape, 1))
+    
+    def forward(self, input):
+        if self.causal:
+            return self.layer_norm(input.transpose(1, 2)).transpose(1, 2)
+        
+        mean = torch.mean(input, dim=(1, 2) ,keepdim=True)
+        var = torch.mean((input - mean) ** 2, dim=(1, 2), keepdim=True)
+
+        output = self.gamma * (input - mean) / torch.sqrt(var + self.EPS) + self.beta
         return output
