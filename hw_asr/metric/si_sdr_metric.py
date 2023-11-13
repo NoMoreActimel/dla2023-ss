@@ -7,7 +7,7 @@ from hw_asr.base.base_metric import BaseMetric
 class SiSDRMetricWrapper(BaseMetric):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.si_sdr = ScaleInvariantSignalDistortionRatio()        
+        self.si_sdr = ScaleInvariantSignalDistortionRatio(zero_mean=True)        
 
     def __call__(self, predicts, target, **kwargs):
         """
