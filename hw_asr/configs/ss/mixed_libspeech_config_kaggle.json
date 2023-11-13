@@ -40,7 +40,7 @@
               "data_mixed_dir": "/kaggle/working/dla2023-ss/data/librispeech-mixed",
               "data_write_dir": "/kaggle/working/dla2023-ss/data/librispeech-index",
               "mixer_audio_length": 4,
-              "snr_levels": [0, 5]
+              "snr_levels": [-5, 5]
             }
           }
         ]
@@ -57,7 +57,7 @@
               "data_mixed_dir": "/kaggle/working/dla2023-ss/data/librispeech-mixed",
               "data_write_dir": "/kaggle/working/dla2023-ss/data/librispeech-index",
               "mixer_audio_length": 4,
-              "snr_levels": [0, 5]
+              "snr_levels": [0]
             }
           }
         ]
