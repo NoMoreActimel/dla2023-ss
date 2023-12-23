@@ -7,8 +7,8 @@ import torch
 from tqdm import tqdm
 
 import hw_asr.model as module_model
-from hw_asr.loss import SpExPlusLoss
-from hw_asr.metric import SiSDRMetric, PESQMetric
+import hw_asr.loss as module_loss
+import hw_asr.metric as module_metric
 from hw_asr.trainer import Trainer
 from hw_asr.utils import ROOT_PATH
 from hw_asr.utils.object_loading import get_dataloaders
@@ -30,7 +30,8 @@ def main(config, out_file):
     dataloaders = get_dataloaders(config, text_encoder)
 
     # build model architecture
-    model = config.init_obj(config["arch"], module_model, n_class=len(text_encoder))
+    # num_speakers harcoded as there were 144 (??) speakers at datasphere, whereas at kaggle we have 160
+    model = config.init_obj(config["arch"], module_model, num_speakers=144) # dataloaders["train"].dataset.num_speakers)
     logger.info(model)
 
     logger.info("Loading checkpoint: {} ...".format(config.resume))
@@ -45,10 +46,12 @@ def main(config, out_file):
     model.eval()
 
     results = []
-
-    loss = SpExPlusLoss()
-    sisdr_metric = SiSDRMetric()
-    pesq_metric = PESQMetric()
+    
+    loss = config.init_obj(config["loss"], module_loss).to(device)
+    sisdr_metric, pesq_metric = [
+        config.init_obj(metric_dict, module_metric, text_encoder=text_encoder)
+        for metric_dict in config["metrics"]
+    ]
 
     n = 0
     losses = 0.
@@ -58,22 +61,21 @@ def main(config, out_file):
     with torch.no_grad():
         for batch_num, batch in enumerate(tqdm(dataloaders["test"])):
             batch = Trainer.move_batch_to_device(batch, device)
-            output, _ = model(**batch)
-            batch["predicts"] = output
+            batch["predicts"], _ = model(**batch)
 
-            sisdr_loss, _, _ = loss(**batch)
+            sisdr_loss, _, _ = loss(eval_mode=True, **batch)
             sisdr = sisdr_metric(**batch)
             pesq = pesq_metric(**batch)
 
-            losses.append(sisdr_loss)
-            sisdrs.append(sisdr)
-            pesqs.append(pesq)
+            losses += sisdr_loss.item()
+            sisdrs += sisdr.item()
+            pesqs += pesq.item()
             n += 1
     
     results.append({
-        "SiSDR manual": -losses / n,
-        "SiSDR torch": sisdrs / n,
-        "PESQ torch": pesqs / n,
+        "SiSDR loss": -losses / n,
+        "SiSDR torch metric": sisdrs / n,
+        "PESQ torch metric": pesqs / n,
     })
 
     with Path(out_file).open("w") as f:
